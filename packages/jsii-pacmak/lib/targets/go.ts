@@ -1,17 +1,11 @@
-import { CodeMaker } from 'codemaker';
 import * as fs from 'fs-extra';
-import { Assembly } from 'jsii-reflect';
-import { Rosetta } from 'jsii-rosetta';
 import * as path from 'path';
 
-import { IGenerator, Legalese } from '../generator';
 import * as logging from '../logging';
 import { findLocalBuildDirs, Target, TargetOptions } from '../target';
 import { shell } from '../util';
-import { Documentation } from './go/documentation';
+import { GoGenerator } from './go/go-generator';
 import { GOMOD_FILENAME, RootPackage } from './go/package';
-import { JSII_INIT_PACKAGE } from './go/runtime';
-import { tarballName } from './go/util';
 
 export class Golang extends Target {
   private readonly goGenerator: GoGenerator;
@@ -62,7 +56,7 @@ export class Golang extends Target {
       });
     }
 
-    // delete local.go.mod and local.go.sum from the output directory so it doesn't get published
+    // delete local.go.mod and local.go.sum from the output directory, so it doesn't get published
     const localGoSum = `${path.basename(localGoMod.path, '.mod')}.sum`;
     await fs.remove(path.join(pkgDir, localGoMod.path));
     return fs.remove(path.join(pkgDir, localGoSum));
@@ -140,77 +134,12 @@ export class Golang extends Target {
   }
 }
 
-class GoGenerator implements IGenerator {
-  private assembly!: Assembly;
-  public rootPackage!: RootPackage;
-
-  private readonly code = new CodeMaker({
-    indentCharacter: '\t',
-    indentationLevel: 1,
-  });
-  private readonly documenter: Documentation;
-
-  private readonly rosetta: Rosetta;
-  private readonly runtimeTypeChecking: boolean;
-
-  public constructor(options: {
-    readonly rosetta: Rosetta;
-    readonly runtimeTypeChecking: boolean;
-  }) {
-    this.rosetta = options.rosetta;
-    this.documenter = new Documentation(this.code, this.rosetta);
-    this.runtimeTypeChecking = options.runtimeTypeChecking;
-  }
-
-  public async load(_: string, assembly: Assembly): Promise<void> {
-    this.assembly = assembly;
-    return Promise.resolve();
-  }
-
-  public async upToDate(_outDir: string) {
-    return Promise.resolve(false);
-  }
-
-  public generate(): void {
-    this.rootPackage = new RootPackage(this.assembly);
-
-    return this.rootPackage.emit({
-      code: this.code,
-      documenter: this.documenter,
-      runtimeTypeChecking: this.runtimeTypeChecking,
-    });
-  }
-
-  public async save(
-    outDir: string,
-    tarball: string,
-    { license, notice }: Legalese,
-  ): Promise<any> {
-    const output = path.join(outDir, this.rootPackage.packageName);
-    await this.code.save(output);
-    await fs.copyFile(
-      tarball,
-      path.join(output, JSII_INIT_PACKAGE, tarballName(this.assembly)),
-    );
-
-    if (license) {
-      await fs.writeFile(path.join(output, 'LICENSE'), license, {
-        encoding: 'utf8',
-      });
-    }
-
-    if (notice) {
-      await fs.writeFile(path.join(output, 'NOTICE'), notice, {
-        encoding: 'utf8',
-      });
-    }
-  }
-}
-
 /**
  * Checks if `buildDir` includes a local go build version (with "replace"
  * directives).
- * @param baseDir the `dist/go` directory
+ *
+ * @param  baseDir  The `dist/go` directory.
+ * @param  pkg      The package to check.
  * @returns `undefined` if not or the module directory otherwise.
  */
 async function tryFindLocalModule(baseDir: string, pkg: RootPackage) {
@@ -236,7 +165,7 @@ async function tryFindLocalModule(baseDir: string, pkg: RootPackage) {
  * Check if we are running from inside the jsii repository, and then we want to
  * use the local runtime instead of download from a released version.
  *
- * This is a generator that procudes an entry for each local module that
+ * This is a generator that procures an entry for each local module that
  * is identified under the local module path exposed by `@jsii/go-runtime` .
  */
 function tryFindLocalRuntime():
