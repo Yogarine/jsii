@@ -8,7 +8,7 @@ import { Toposorted } from '../toposort';
 import { flatten } from '../util';
 import { DotnetBuilder } from './dotnet';
 import { Golang } from './go';
-import { JavaBuilder } from './java';
+import { JavaBuilder } from './java/java-builder';
 import JavaScript from './js';
 import Python from './python';
 
