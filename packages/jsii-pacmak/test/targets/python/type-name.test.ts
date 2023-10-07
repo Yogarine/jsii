@@ -9,11 +9,9 @@ import {
   TypeReference,
 } from '@jsii/spec';
 
-import {
-  toTypeName,
-  NamingContext,
-  PythonImports,
-} from '../../../lib/targets/python/type-name';
+import { NamingContext } from '../../../lib/targets/python/naming-context';
+import { PythonImports } from '../../../lib/targets/python/python-imports';
+import { toTypeName } from '../../../lib/targets/python/type-name';
 
 const BORING_TYPE = 'BoringClass';
 const NESTED_TYPE = 'NestedType';
