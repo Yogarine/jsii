@@ -10,6 +10,7 @@ import { DotnetBuilder } from './dotnet';
 import { Golang } from './go';
 import { JavaBuilder } from './java';
 import JavaScript from './js';
+import Php from './php';
 import Python from './python';
 
 export enum TargetName {
@@ -17,6 +18,7 @@ export enum TargetName {
   GO = 'go',
   JAVA = 'java',
   JAVASCRIPT = 'js',
+  PHP = 'php',
   PYTHON = 'python',
 }
 
@@ -31,6 +33,7 @@ export const ALL_BUILDERS: { [key in TargetName]: BuilderFactory } = {
   java: (ms, o) => new JavaBuilder(flatten(ms), o),
   js: (ms, o) =>
     new IndependentPackageBuilder(TargetName.JAVASCRIPT, JavaScript, ms, o),
+  php: (ms, o) => new IndependentPackageBuilder(TargetName.PHP, Php, ms, o),
   python: (ms, o) =>
     new IndependentPackageBuilder(TargetName.PYTHON, Python, ms, o),
 };
